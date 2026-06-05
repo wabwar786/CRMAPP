@@ -1,0 +1,68 @@
+name: smartcrm_project
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  http: ^1.4.0
+  line_icons: ^2.0.3
+  url_launcher: ^6.3.1
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
+  flutter_animate: ^4.5.2
+  flutter_callkit_incoming: ^2.5.2
+  phone_state: ^2.1.1
+  flutter_phone_direct_caller: ^2.2.1
+
+  permission_handler: ^12.0.0+1
+  device_info_plus: ^11.5.0
+  
+  uuid: ^4.5.1
+  rename: ^3.1.0
+  flutter_native_splash: ^2.4.6
+  mime: ^2.0.0
+  http_parser: ^4.1.2
+  webview_flutter: ^4.13.1
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
+    - assets/Appicon.png
+
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png" 
+
+
+
+flutter_native_splash:
+  color: "#ffffff" # Background color
+  image: assets/logo.png # Your splash image
+  
+  android: true
+  ios: true
+  web: true
+
+  android_gravity: center
+  ios_content_mode: center

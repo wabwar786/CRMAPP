@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for 182.191.84.211 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">182.191.84.211</domain>
+    </domain-config>
+
+    <!-- Allow cleartext traffic for localhost -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+
+    <!-- Base config for other domains (disallows cleartext) -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
