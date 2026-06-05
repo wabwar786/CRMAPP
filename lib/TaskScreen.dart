@@ -21,7 +21,7 @@ class _TaskScreenState extends State<TaskScreen> {
   final Color _primaryColor = const Color(0xFF049881);
   final Color _secondaryColor = const Color(0xFF8B0000);
   final Color _accentColor = const Color(0xFF81C784);
-  final Color _backgroundColor = const Color(0xFFF8F9FA);
+  final Color _backgroundColor = const Color(0xFFF0F4F8);
   final Color _cardColor = const Color.fromARGB(255, 255, 255, 255);
   final Color _textColor = const Color(0xFF333333);
   final Color _lightTextColor = const Color(0xFF757575);
@@ -341,7 +341,6 @@ class _TaskScreenState extends State<TaskScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.only(top: 10, bottom: 20, left: 20, right: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _headerGradient,
@@ -349,44 +348,72 @@ class _TaskScreenState extends State<TaskScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
-            offset: const Offset(0, 5),
-          ),
+          BoxShadow(color: const Color(0xFF049881).withOpacity(0.35), blurRadius: 24, offset: const Offset(0, 8)),
         ],
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 28,
+          Positioned(top: -30, right: -20,
+            child: Container(width: 120, height: 120,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.05)))),
+          Positioned(top: 30, right: 70,
+            child: Container(width: 50, height: 50,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.04)))),
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 20, left: 16, right: 16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 18),
+                        onPressed: () => Navigator.pop(context),
+                        padding: const EdgeInsets.all(8),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('My Tasks',
+                            style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                          Text('Manage your assignments',
+                            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.7), fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white.withOpacity(0.25)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.task_alt_rounded, color: Colors.white, size: 14),
+                          const SizedBox(width: 5),
+                          Text('${_tasks.length}',
+                            style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                onPressed: () => Navigator.pop(context),
-              ),
-              Text(
-                'My Tasks',
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 48), // For balance
-            ],
+                const SizedBox(height: 14),
+                _buildFilterChips(),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          _buildFilterChips(),
         ],
       ),
     ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.1, end: 0);
@@ -454,77 +481,59 @@ class _TaskScreenState extends State<TaskScreen> {
   Widget _buildStatsCard() {
     final totalCount = _tasks.length;
     final newCount = _tasks.where((task) => task['status'] == 'New').length;
-    final pendingCount = _tasks
-        .where((task) => task['status'] == 'Pending')
-        .length;
-    final completedCount = _tasks
-        .where((task) => task['status'] == 'Completed')
-        .length;
+    final pendingCount = _tasks.where((task) => task['status'] == 'Pending').length;
+    final completedCount = _tasks.where((task) => task['status'] == 'Completed').length;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 2,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
+      margin: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatItem('Total', totalCount.toString(), LineIcons.tasks),
-              _buildStatItem('New', newCount.toString(), LineIcons.star),
-              _buildStatItem(
-                'Pending',
-                pendingCount.toString(),
-                LineIcons.clock,
-              ),
-              _buildStatItem(
-                'Done',
-                completedCount.toString(),
-                LineIcons.checkCircle,
-              ),
-            ],
-          ),
+          _buildStatItem('Total', totalCount.toString(), Icons.assignment_rounded, const Color(0xFF049881)),
+          const SizedBox(width: 10),
+          _buildStatItem('New', newCount.toString(), Icons.fiber_new_rounded, const Color(0xFF2196F3)),
+          const SizedBox(width: 10),
+          _buildStatItem('Pending', pendingCount.toString(), Icons.pending_actions_rounded, const Color(0xFFFF9800)),
+          const SizedBox(width: 10),
+          _buildStatItem('Done', completedCount.toString(), Icons.check_circle_rounded, const Color(0xFF4CAF50)),
         ],
       ),
     ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildStatItem(String title, String value, IconData icon) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
+  Widget _buildStatItem(String title, String value, IconData icon, Color color) {
+    final isActive = _currentFilter == title || (_currentFilter == 'All' && title == 'Total');
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _filterTasks(title == 'Total' ? 'All' : title),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: _primaryColor.withOpacity(0.1),
-            shape: BoxShape.circle,
+            color: isActive ? color : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: isActive ? color.withOpacity(0.3) : Colors.black.withOpacity(0.05),
+                blurRadius: isActive ? 10 : 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          child: Icon(icon, color: _primaryColor, size: 20),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _textColor,
+          child: Column(
+            children: [
+              Icon(icon, color: isActive ? Colors.white : color, size: 20),
+              const SizedBox(height: 6),
+              Text(value,
+                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w800,
+                  color: isActive ? Colors.white : const Color(0xFF1A2332))),
+              Text(title,
+                style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w500,
+                  color: isActive ? Colors.white.withOpacity(0.85) : const Color(0xFF6B7A8D)),
+                textAlign: TextAlign.center),
+            ],
           ),
         ),
-        Text(
-          title,
-          style: GoogleFonts.poppins(fontSize: 12, color: _lightTextColor),
-        ),
-      ],
+      ),
     );
   }
 
@@ -534,128 +543,114 @@ class _TaskScreenState extends State<TaskScreen> {
     final statusColor = _statusColors[status] ?? _primaryColor;
     final isCompleted = status == 'Completed';
 
-    return Card(
-      margin: const EdgeInsets.fromLTRB(20, 5, 20, 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(15),
-        onTap: () {
-          setState(() {
-            _expandedTaskIndex = isExpanded ? null : index;
-          });
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                task['title']?.toString() ?? 'No Title',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+    final borderColors = {
+      'New': const Color(0xFF2196F3),
+      'Pending': const Color(0xFFFF9800),
+      'Completed': const Color(0xFF4CAF50),
+    };
+    final leftColor = borderColors[status] ?? _primaryColor;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 5, 14, 8),
+      decoration: BoxDecoration(
+        color: isCompleted ? const Color(0xFFF1FFF6) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border(left: BorderSide(color: leftColor, width: 4)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 3))],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => setState(() => _expandedTaskIndex = isExpanded ? null : index),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Status icon circle
+                    Container(
+                      width: 42, height: 42,
+                      decoration: BoxDecoration(
+                        color: leftColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: leftColor.withOpacity(0.2)),
+                      ),
+                      child: Icon(
+                        isCompleted ? Icons.check_circle_rounded :
+                          status == 'Pending' ? Icons.pending_actions_rounded : Icons.assignment_rounded,
+                        color: leftColor, size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(task['title']?.toString() ?? 'No Title',
+                                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 14,
+                                    color: isCompleted ? const Color(0xFF6B7A8D) : const Color(0xFF1A2332),
+                                    decoration: isCompleted ? TextDecoration.lineThrough : null),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
                               ),
-                            ),
-                            if (status == 'New')
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _primaryColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  'NEW',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    color: _primaryColor,
-                                    fontWeight: FontWeight.bold,
+                              if (status == 'New')
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2196F3).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
+                                  child: Text('NEW',
+                                    style: GoogleFonts.poppins(fontSize: 9, color: const Color(0xFF2196F3), fontWeight: FontWeight.w800)),
                                 ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: statusColor.withOpacity(0.3),
-                                  width: 1,
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: statusColor.withOpacity(0.25)),
                                 ),
+                                child: Text(status,
+                                  style: GoogleFonts.poppins(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
                               ),
-                              child: Text(
-                                status,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: statusColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              LineIcons.calendar,
-                              size: 14,
-                              color: _lightTextColor,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _formatDate(task['due_date']?.toString()),
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: _lightTextColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isCompleted)
-                    IconButton(
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          LineIcons.check,
-                          color: _primaryColor,
-                          size: 28,
-                        ),
-                      ),
-                      onPressed: () => _updateTaskStatus(
-                        task['task_id'].toString(),
-                        'Completed',
+                              const SizedBox(width: 8),
+                              Icon(Icons.calendar_today_rounded, size: 12, color: _lightTextColor),
+                              const SizedBox(width: 4),
+                              Text(_formatDate(task['due_date']?.toString()),
+                                style: GoogleFonts.poppins(fontSize: 11, color: _lightTextColor, fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              ),
+                    if (!isCompleted)
+                      GestureDetector(
+                        onTap: () => _updateTaskStatus(task['task_id'].toString(), 'Completed'),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF049881), Color(0xFF026D5E)],
+                              begin: Alignment.topLeft, end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [BoxShadow(color: const Color(0xFF049881).withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 2))],
+                          ),
+                          child: const Icon(Icons.check_rounded, color: Colors.white, size: 20),
+                        ),
+                      ),
+                  ],
+                ),
               if (isExpanded) ...[
                 const Divider(height: 20),
                 _buildDetailRow(
@@ -681,47 +676,37 @@ class _TaskScreenState extends State<TaskScreen> {
                     children: [
                       // Always show the Pending button if task is not completed
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _updateTaskStatus(
-                            task['task_id'].toString(),
-                            'Pending',
-                          ),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.pending_actions_rounded, size: 16),
+                          label: Text('Pending', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13)),
+                          onPressed: () => _updateTaskStatus(task['task_id'].toString(), 'Pending'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.orange,
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: BorderSide(color: Colors.orange),
-                          ),
-                          child: Text(
-                            'Mark Pending',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            side: const BorderSide(color: Colors.orange, width: 1.5),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => _updateTaskStatus(
-                            task['task_id'].toString(),
-                            'Completed',
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF049881), Color(0xFF026D5E)],
+                              begin: Alignment.centerLeft, end: Alignment.centerRight,
                             ),
-                            elevation: 0,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text(
-                            'Complete',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w500,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.check_rounded, size: 16),
+                            label: Text('Complete', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13)),
+                            onPressed: () => _updateTaskStatus(task['task_id'].toString(), 'Completed'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent, shadowColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
