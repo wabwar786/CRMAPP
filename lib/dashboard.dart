@@ -75,13 +75,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ─── Design tokens ────────────────────────────────────────────────────────
   final Color _primaryColor = const Color(0xFF049881);
   final Color _secondaryColor = const Color(0xFF8B0000);
-  final Color _backgroundColor = const Color(0xFFF8F9FA);
+  final Color _backgroundColor = const Color(0xFFF0F4F8);
   final Color _cardColor = Colors.white;
-  final Color _textColor = const Color(0xFF333333);
-  final Color _lightTextColor = const Color(0xFF757575);
+  final Color _textColor = const Color(0xFF1A2332);
+  final Color _lightTextColor = const Color(0xFF6B7A8D);
   final List<Color> _headerGradient = [
     const Color(0xFF049881),
-    const Color(0xFF028174),
+    const Color(0xFF026D5E),
+    const Color(0xFF023D38),
   ];
   final Map<String, Color> _statusColors = {
     'New lead': const Color(0xFF2196F3),
@@ -487,51 +488,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return null;
   }
 
-  // [CHANGED] Smart status based on duration + ring time + call type
   String _determineCallStatus(int durationSeconds, int callType) {
-    // callType: 1=Incoming, 2=Outgoing, 3=Missed, 5=Rejected/Busy
-    
-    // Missed call (OS detected)
-    if (callType == 3) return 'Not Answered';
-    
-    // Rejected / Busy (customer cut the call)
-    if (callType == 5) return 'Busy';
-
-    // Outgoing call
-    if (callType == 2) {
-      if (durationSeconds == 0) {
-        // Call placed but 0 duration — not connected at all
-        return 'Not Connected';
-      }
-      if (durationSeconds <= 3) {
-        // Very quick end — customer rejected / busy
-        return 'Busy';
-      }
-      if (durationSeconds <= 25) {
-        // Short call — rang but customer disconnected quickly
-        return 'Not Answered';
-      }
-      if (durationSeconds <= 120) {
-        // Brief conversation
-        return 'Connected';
-      }
-      if (durationSeconds <= 300) {
-        return 'Verified';
-      }
-      return 'Quality';
-    }
-
-    // Incoming call
-    if (callType == 1) {
-      if (durationSeconds == 0) return 'Missed';
-      if (durationSeconds <= 120) return 'Connected';
-      return 'Quality';
-    }
-
-    // Fallback
-    if (durationSeconds == 0) return 'Not Connected';
-    if (durationSeconds <= 25) return 'Not Answered';
-    if (durationSeconds <= 120) return 'Connected';
+    if (durationSeconds == 0) return 'Not Picked';
+    if (durationSeconds <= 60) return 'Connected';
+    if (durationSeconds <= 120) return 'Verified';
     return 'Quality';
   }
 
@@ -1287,71 +1247,138 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ─── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: _headerGradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(28), bottomRight: Radius.circular(28)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        children: [
-          // [CHANGED] Responsive header row — no overflow on small screens
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Dashboard',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // [CHANGED] Web View button
-              _buildHeaderButton(
-                icon: Icons.open_in_browser_rounded,
-                label: 'Portal',
-                onTap: _switchToWebView,
-              ),
-              // Notification bell
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 26),
-                    onPressed: _navigateToTasks,
-                    padding: EdgeInsets.zero,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  if (_notificationCount > 0)
-                    Positioned(
-                      right: 4,
-                      top: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                        child: Text(
-                          _notificationCount > 99 ? '99+' : _notificationCount.toString(),
-                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(LineIcons.alternateSignOut, color: Colors.white, size: 24),
-                onPressed: _showLogoutConfirmation,
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _buildSiteDropdown(),
+        gradient: LinearGradient(
+          colors: _headerGradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF049881).withOpacity(0.35), blurRadius: 24, offset: const Offset(0, 8)),
+          BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.05, end: 0);
+      child: Stack(
+        children: [
+          // Decorative circle top-right
+          Positioned(
+            top: -30, right: -20,
+            child: Container(
+              width: 120, height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.05),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 20, right: 60,
+            child: Container(
+              width: 60, height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.04),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // Avatar / brand icon
+                    Container(
+                      width: 38, height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+                      ),
+                      child: const Icon(Icons.dashboard_rounded, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('SmartCRM',
+                            style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+                          Text('Dashboard',
+                            style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.7), fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    _buildHeaderButton(
+                      icon: Icons.open_in_browser_rounded,
+                      label: 'Portal',
+                      onTap: _switchToWebView,
+                    ),
+                    const SizedBox(width: 4),
+                    // Notification bell
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.notifications_rounded, color: Colors.white, size: 22),
+                            onPressed: _navigateToTasks,
+                            padding: const EdgeInsets.all(8),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ),
+                        if (_notificationCount > 0)
+                          Positioned(
+                            right: 2, top: 2,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF4757),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 1.5),
+                              ),
+                              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                              child: Text(
+                                _notificationCount > 99 ? '99+' : _notificationCount.toString(),
+                                style: GoogleFonts.poppins(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 2),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(LineIcons.alternateSignOut, color: Colors.white, size: 20),
+                        onPressed: _showLogoutConfirmation,
+                        padding: const EdgeInsets.all(8),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                _buildSiteDropdown(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.08, end: 0);
   }
 
 Widget _buildHeaderButton({
@@ -1412,33 +1439,42 @@ Widget _buildHeaderButton({
   // ─── Site dropdown ────────────────────────────────────────────────────────
   Widget _buildSiteDropdown() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedSite,
           isExpanded: true,
           isDense: true,
+          dropdownColor: const Color(0xFF026D5E),
           icon: _isFetchingSites
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Icon(Icons.arrow_drop_down),
-          hint: Text('All Sites', style: GoogleFonts.poppins(color: Colors.grey.shade600, fontSize: 13)),
-          style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF333333)),
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70),
+          hint: Row(children: [
+            const Icon(Icons.location_on_rounded, size: 14, color: Colors.white70),
+            const SizedBox(width: 6),
+            Text('All Sites', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13)),
+          ]),
+          style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
           items: [
             DropdownMenuItem<String>(
               value: null,
-              child: Text('All Sites', style: GoogleFonts.poppins(fontSize: 13)),
+              child: Row(children: [
+                const Icon(Icons.public_rounded, size: 14, color: Colors.white70),
+                const SizedBox(width: 6),
+                Text('All Sites', style: GoogleFonts.poppins(fontSize: 13, color: Colors.white)),
+              ]),
             ),
             ..._sites.map((s) {
               final name = s['site_name']?.toString() ?? 'Unknown';
               return DropdownMenuItem<String>(
                 value: name,
-                child: Text(name, style: GoogleFonts.poppins(fontSize: 13), overflow: TextOverflow.ellipsis),
+                child: Text(name, style: GoogleFonts.poppins(fontSize: 13, color: Colors.white), overflow: TextOverflow.ellipsis),
               );
             }),
           ],
@@ -1455,28 +1491,26 @@ Widget _buildHeaderButton({
     final dueC = _filteredLeads.where(_isDueLead).length;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4))],
-      ),
+      margin: const EdgeInsets.fromLTRB(14, 14, 14, 0),
       child: Column(
         children: [
-          // Stat items row
+          // Stats row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem('Total', total.toString(), LineIcons.users, isActive: _currentFilter == 'All', onTap: () => _filterLeads('All')),
-              _buildStatItem('New', newC.toString(), LineIcons.star, isActive: _currentFilter == 'New', onTap: () => _filterLeads('New')),
-              _buildStatItem('Due', dueC.toString(), LineIcons.clock, isActive: _currentFilter == 'Due', onTap: () => _filterLeads('Due')),
+              _buildStatItem('Total Leads', total.toString(), Icons.people_alt_rounded,
+                color: const Color(0xFF049881), isActive: _currentFilter == 'All', onTap: () => _filterLeads('All')),
+              const SizedBox(width: 10),
+              _buildStatItem('New', newC.toString(), Icons.fiber_new_rounded,
+                color: const Color(0xFF2196F3), isActive: _currentFilter == 'New', onTap: () => _filterLeads('New')),
+              const SizedBox(width: 10),
+              _buildStatItem('Overdue', dueC.toString(), Icons.warning_amber_rounded,
+                color: const Color(0xFFE53935), isActive: _currentFilter == 'Due', onTap: () => _filterLeads('Due')),
             ],
           ),
-          const SizedBox(height: 10),
-          // Filter chips — horizontal scroll, no overflow
+          const SizedBox(height: 12),
+          // Filter chips
           SizedBox(
-            height: 34,
+            height: 36,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -1496,42 +1530,90 @@ Widget _buildHeaderButton({
   }
 
   Widget _buildStatItem(String title, String value, IconData icon,
-      {bool isActive = false, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isActive ? _primaryColor : _primaryColor.withOpacity(0.1),
-              shape: BoxShape.circle,
+      {Color color = const Color(0xFF049881), bool isActive = false, VoidCallback? onTap}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+          decoration: BoxDecoration(
+            color: isActive ? color : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: isActive ? color.withOpacity(0.3) : Colors.black.withOpacity(0.05),
+                blurRadius: isActive ? 12 : 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+            border: Border.all(
+              color: isActive ? color : Colors.transparent,
+              width: 1.5,
             ),
-            child: Icon(icon, color: isActive ? Colors.white : _primaryColor, size: 18),
           ),
-          const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: isActive ? _primaryColor : _textColor)),
-          Text(title, style: GoogleFonts.poppins(fontSize: 11, color: isActive ? _primaryColor : _lightTextColor)),
-        ],
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.white.withOpacity(0.2) : color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: isActive ? Colors.white : color, size: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(value,
+                style: GoogleFonts.poppins(
+                  fontSize: 20, fontWeight: FontWeight.w800,
+                  color: isActive ? Colors.white : _textColor,
+                )),
+              const SizedBox(height: 2),
+              Text(title,
+                style: GoogleFonts.poppins(
+                  fontSize: 10, fontWeight: FontWeight.w500,
+                  color: isActive ? Colors.white.withOpacity(0.85) : _lightTextColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _filterChip(String label) {
     final active = _currentFilter == label;
+    final chipColors = {
+      'All': const Color(0xFF049881),
+      'New lead': const Color(0xFF2196F3),
+      'Meeting': const Color(0xFF7C4DFF),
+      'Follow up': const Color(0xFF673AB7),
+      'Pending': const Color(0xFFFF9800),
+      'Ready for sale': const Color(0xFF009688),
+      'Disqualified': const Color(0xFFFC0000),
+    };
+    final c = chipColors[label] ?? _primaryColor;
     return GestureDetector(
       onTap: () => _filterLeads(label),
-      child: Container(
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: active ? _primaryColor : _primaryColor.withOpacity(0.08),
+          color: active ? c : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? _primaryColor : _primaryColor.withOpacity(0.2)),
+          border: Border.all(color: active ? c : Colors.grey.shade200, width: 1.5),
+          boxShadow: active ? [BoxShadow(color: c.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : [],
         ),
         child: Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 11, color: active ? Colors.white : _primaryColor, fontWeight: FontWeight.w500),
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: active ? Colors.white : _lightTextColor,
+            fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -1548,7 +1630,7 @@ Widget _buildHeaderButton({
       onRefresh: _fetchLeads,
       color: _primaryColor,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 24),
         itemCount: _filteredLeads.length,
         itemBuilder: (_, i) => _buildLeadCard(_filteredLeads[i], i),
       ),
@@ -1566,85 +1648,123 @@ Widget _buildHeaderButton({
     final isDue = _isDueLead(lead);
     final showAction = status != 'Closed' && status != 'Disqualified';
 
-    Color bg = _cardColor;
-    if (isNew) bg = const Color(0xFFE3F2FD);
-    else if (isDue) bg = const Color(0xFFFFEBEE);
+    // Card background based on state
+    Color bg = Colors.white;
+    Color leftBorderColor = statusColor;
+    if (isNew) { bg = const Color(0xFFF0F9FF); leftBorderColor = const Color(0xFF2196F3); }
+    else if (isDue) { bg = const Color(0xFFFFF5F5); leftBorderColor = const Color(0xFFE53935); }
 
-    return Card(
-      color: bg,
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 1.5,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => setState(() => _expandedLeadIndex = isExpanded ? null : index),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-          child: Column(
-            children: [
-              // ── Card header row ─────────────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Name + badges + status
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                lead['c_name']?.toString() ?? 'No Name',
-                                style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+    final initials = (lead['c_name']?.toString() ?? 'N')
+        .split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border(left: BorderSide(color: leftBorderColor, width: 4)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => setState(() => _expandedLeadIndex = isExpanded ? null : index),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 13, 12, 13),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Avatar circle
+                    Container(
+                      width: 42, height: 42,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [statusColor.withOpacity(0.8), statusColor],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: Center(
+                        child: Text(initials,
+                          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  lead['c_name']?.toString() ?? 'No Name',
+                                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 14, color: _textColor),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            if (isNew) _badge('NEW', _primaryColor),
-                            if (isDue && !isNew) _badge('DUE', Colors.red),
+                              const SizedBox(width: 5),
+                              if (isNew) _badge('NEW', const Color(0xFF2196F3)),
+                              if (isDue && !isNew) _badge('DUE', const Color(0xFFE53935)),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: statusColor.withOpacity(0.25)),
+                                ),
+                                child: Text(status,
+                                  style: GoogleFonts.poppins(fontSize: 10, color: statusColor, fontWeight: FontWeight.w600)),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.schedule_rounded, size: 12, color: daysColor),
+                                  const SizedBox(width: 3),
+                                  Text(daysRemaining,
+                                    style: GoogleFonts.poppins(fontSize: 11, color: daysColor, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Call button — prominent green
+                    GestureDetector(
+                      onTap: () => _makePhoneCall(lead['c_phone']?.toString() ?? '', lead['leadid']?.toString() ?? ''),
+                      child: Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF049881), Color(0xFF026D5E)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0xFF049881).withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3)),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        // Status + days — wrapped so no overflow on small screen
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: statusColor.withOpacity(0.3)),
-                              ),
-                              child: Text(status, style: GoogleFonts.poppins(fontSize: 11, color: statusColor, fontWeight: FontWeight.w500)),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(LineIcons.calendar, size: 12, color: daysColor),
-                                const SizedBox(width: 3),
-                                Text(daysRemaining, style: GoogleFonts.poppins(fontSize: 11, color: daysColor, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                        child: const Icon(Icons.call_rounded, color: Colors.white, size: 20),
+                      ),
                     ),
-                  ),
-                  // Call button
-                  GestureDetector(
-                    onTap: () => _makePhoneCall(lead['c_phone']?.toString() ?? '', lead['leadid']?.toString() ?? ''),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: _primaryColor.withOpacity(0.1), shape: BoxShape.circle),
-                      child: Icon(LineIcons.phone, color: _primaryColor, size: 22),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
               // ── Expanded details ────────────────────────────────────────
               if (isExpanded) ...[
@@ -1680,17 +1800,27 @@ Widget _buildHeaderButton({
                   _detailRow(LineIcons.mapMarker, 'Site', lead['site_name']?.toString() ?? ''),
                 if (showAction) ...[
                   const SizedBox(height: 12),
-                  SizedBox(
+                  Container(
                     width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF049881), Color(0xFF026D5E)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(13),
+                      boxShadow: [BoxShadow(color: const Color(0xFF049881).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
+                    ),
                     child: ElevatedButton.icon(
-                      icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: Text('Take Action', style: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 13)),
+                      icon: const Icon(Icons.bolt_rounded, size: 18),
+                      label: Text('Take Action', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13)),
                       onPressed: () => _showActionDialog(lead),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryColor, foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 1,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
                       ),
                     ),
                   ),
