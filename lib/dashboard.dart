@@ -18,7 +18,6 @@ import 'package:smartcrm_project/TaskScreen.dart';
 import 'package:smartcrm_project/login.dart';
 import 'package:smartcrm_project/webview_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -364,24 +363,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     if (_permissionsGranted) await _startCallRecording(cleaned);
+    _startCallLogChecker();
 
-    // [CHANGED] Direct call - OS dialer nahi khulega, app foreground mein rahegi
+    final uri = Uri(scheme: 'tel', path: cleaned);
     try {
-      final bool? called = await FlutterPhoneDirectCaller.callNumber(cleaned);
-      if (called == true) {
-        _startCallLogChecker();
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        _stopCallRecording();
-        _resetCallState();
-        final uri = Uri(scheme: 'tel', path: cleaned);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          await _tryAlternativeCallMethods(cleaned);
-        }
+        throw Exception('No dialer');
       }
     } catch (e) {
-      _logDebug('Direct call error', data: e);
       _stopCallRecording();
       _stopCallLogChecker();
       _resetCallState();
@@ -496,10 +487,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return null;
   }
 
+  // [CHANGED] Smart status based on duration + ring time + call type
   String _determineCallStatus(int durationSeconds, int callType) {
-    if (durationSeconds == 0) return 'Not Picked';
-    if (durationSeconds <= 60) return 'Connected';
-    if (durationSeconds <= 120) return 'Verified';
+    // callType: 1=Incoming, 2=Outgoing, 3=Missed, 5=Rejected/Busy
+    
+    // Missed call (OS detected)
+    if (callType == 3) return 'Not Answered';
+    
+    // Rejected / Busy (customer cut the call)
+    if (callType == 5) return 'Busy';
+
+    // Outgoing call
+    if (callType == 2) {
+      if (durationSeconds == 0) {
+        // Call placed but 0 duration — not connected at all
+        return 'Not Connected';
+      }
+      if (durationSeconds <= 3) {
+        // Very quick end — customer rejected / busy
+        return 'Busy';
+      }
+      if (durationSeconds <= 25) {
+        // Short call — rang but customer disconnected quickly
+        return 'Not Answered';
+      }
+      if (durationSeconds <= 120) {
+        // Brief conversation
+        return 'Connected';
+      }
+      if (durationSeconds <= 300) {
+        return 'Verified';
+      }
+      return 'Quality';
+    }
+
+    // Incoming call
+    if (callType == 1) {
+      if (durationSeconds == 0) return 'Missed';
+      if (durationSeconds <= 120) return 'Connected';
+      return 'Quality';
+    }
+
+    // Fallback
+    if (durationSeconds == 0) return 'Not Connected';
+    if (durationSeconds <= 25) return 'Not Answered';
+    if (durationSeconds <= 120) return 'Connected';
     return 'Quality';
   }
 
