@@ -2814,6 +2814,7 @@ Widget _buildHeaderButton({
           ),
         ),
       ),
+      ),
     );
   }
 
