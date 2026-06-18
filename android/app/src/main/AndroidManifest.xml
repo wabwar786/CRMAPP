@@ -57,6 +57,18 @@
             </intent-filter>
         </activity>
 
+
+        <!-- CRM call receiver: detects incoming/outgoing call state changes -->
+        <receiver
+            android:name=".CallReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+            </intent-filter>
+        </receiver>
+
         <!-- Callkit Background Service -->
         <service
             android:name="com.hiennv.flutter_callkit_incoming.CallkitIncomingBackgroundService"

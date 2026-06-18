@@ -133,7 +133,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleCallRecording(leadId: String, filePath: String?) {
-        if (!isRecording || filePath.isNullOrEmpty()) return
+        if (filePath.isNullOrEmpty()) return
 
         Log.d(TAG, "Preparing to upload recording for lead: $leadId")
 
