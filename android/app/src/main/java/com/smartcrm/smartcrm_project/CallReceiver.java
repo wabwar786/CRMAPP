@@ -80,6 +80,10 @@ private void handleCallEnded(Context context) {
     String leadId = CallStateHandler.getCurrentLeadId();
 
     if (number != null) {
+        // Native background logger saves Outgoing, Incoming, Missed and Rejected
+        // CRM calls even when Flutter UI/app is not open. Unknown numbers are ignored.
+        BackgroundCallLogger.logLatestCrmCall(context.getApplicationContext(), number);
+
         if (recordingPath != null && leadId != null) {
             // Notify recording completion with all required data
             CallStateHandler.notifyCallRecording(

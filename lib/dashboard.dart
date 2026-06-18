@@ -283,6 +283,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ─── Leads ────────────────────────────────────────────────────────────────
+
+  Future<void> _cacheLeadsForNativeBackgroundLogger() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cache = _leads.map((lead) => {
+            'leadid': lead['leadid']?.toString() ?? '',
+            'c_name': lead['c_name']?.toString() ?? '',
+            'c_phone': lead['c_phone']?.toString() ?? '',
+            'status': lead['status']?.toString() ?? '',
+          }).toList();
+      await prefs.setString('crm_leads_cache', jsonEncode(cache));
+    } catch (_) {}
+  }
+
   Future<void> _fetchLeads() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -303,6 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _leads.clear();
           _leads.addAll(List<Map<String, dynamic>>.from(data['leads']));
+          await _cacheLeadsForNativeBackgroundLogger();
           _applyFilters();
         });
       }
@@ -765,6 +780,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'durationSeconds': log['raw_duration_seconds'] ?? 0,
       'subStatus': log['subStatus']?.toString() ?? (wasConnected ? 'Incoming' : 'Missed'),
       'callDate': DateTime.fromMillisecondsSinceEpoch(log['date'] as int).toIso8601String(),
+      'callUniqueId': '${log['date']}_${log['raw_duration_seconds']}_${log['type']}',
     };
 
     if (mounted) {
@@ -977,7 +993,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() => _isLoading = true);
       final leadId = callInfo['leadId']?.toString() ?? '';
       final callDate = callInfo['callDate']?.toString() ?? DateTime.now().toIso8601String();
-      final callUniqueId = 'remarks_${leadId}_${DateTime.parse(callDate).millisecondsSinceEpoch}';
+      final callUniqueId = callInfo['callUniqueId']?.toString().isNotEmpty == true
+          ? callInfo['callUniqueId'].toString()
+          : 'remarks_${leadId}_${DateTime.parse(callDate).millisecondsSinceEpoch}';
 
       final response = await http.post(
         Uri.parse('$_baseUrl$_callLogEndpoint'),
