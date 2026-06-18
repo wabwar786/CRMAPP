@@ -317,7 +317,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _leads.clear();
           _leads.addAll(List<Map<String, dynamic>>.from(data['leads']));
-          await _cacheLeadsForNativeBackgroundLogger();
+         _cacheLeadsForNativeBackgroundLogger();
           _applyFilters();
         });
       }
